@@ -6,20 +6,27 @@ from jinja2.ext import Extension
 from markdown import markdown
 
 class MarkdownExtension(Extension):
-    tags = {"markdown"}
+    """
+    Add to the `extensions` kwarg when constructing a
+    jinja2.Environment.
+    """
+    tags = {"markdown"}  # Add "markdown" to things jinja2 knows
 
     def __init__(self, environment):
         super().__init__(environment)
 
 
     def parse(self, parser):
+        """
+        Grab data inside `markdown` block, pass to a
+        nodes.CallBlock along with the callback that actually
+        runs the markdown conversion on the body.
+        """
         lineno = next(parser.stream).lineno
 
         body = parser.parse_statements(["name:endmarkdown"], drop_needle=True)
-        #for output in body:
-        #    for i in range(len(output.nodes)):
-        #        output.nodes[i] = nodes.MarkSafe(output.nodes[i])
 
+        # Very cryptic argument signature, consult jinja2 docs
         return nodes.CallBlock(
             self.call_method("_md_exec", []), [], [], body
                 ).set_lineno(lineno)
@@ -31,6 +38,7 @@ class MarkdownExtension(Extension):
 
 
 if __name__ == "__main__":
+    # Test run
     file_loader = FileSystemLoader("./")
     env = Environment(loader=file_loader, extensions=[MarkdownExtension])
     template = env.get_template("test.j2")
